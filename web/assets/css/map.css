@@ -1,0 +1,148 @@
+/* block: map — copy to web/assets/css/map.css. See map.md. */
+
+/* Tune from the site's own tokens, on :root or on one .map:
+     --map-marker         the marker fill; map.js reads it
+     --map-marker-stroke  the marker outline and the cluster count
+     --map-height         a fixed height, instead of the aspect ratio
+     --map-radius         the corners */
+
+/* Leaflet measures the box when it starts, so it needs its size before then. */
+.map {
+	position: relative;
+	width: 100%;
+	aspect-ratio: 16 / 9;
+	min-height: 320px;
+	height: var(--map-height, auto);
+	overflow: hidden;
+	border-radius: var(--map-radius, 0);
+	background: #e6e2d8;
+	isolation: isolate;
+}
+
+/* Leaflet adds tabindex=0, so the map can be focused and wheel-zoomed. */
+.map:focus-visible {
+	outline: 2px solid var(--map-marker, #c2410c);
+	outline-offset: 2px;
+}
+
+.map.leaflet-container {
+	font-family: inherit;
+}
+
+/* Only shown when map.js found no Leaflet or no points. */
+.map__fallback {
+	display: none;
+	position: absolute;
+	inset: 0;
+	place-content: center;
+	margin: 0;
+	padding: 1rem;
+	text-align: center;
+}
+
+.map.is-unavailable .map__fallback {
+	display: grid;
+}
+
+.map .leaflet-popup-content-wrapper {
+	border-radius: var(--map-radius, 4px);
+}
+
+.map__popup {
+	display: grid;
+	gap: 0.25rem;
+	font-size: 0.875rem;
+}
+
+/* Cluster bubbles take the marker colour instead of the plugin's greens. */
+.map .marker-cluster {
+	background: color-mix(in srgb, var(--map-marker, #c2410c) 35%, transparent);
+}
+
+.map .marker-cluster div {
+	background: var(--map-marker, #c2410c);
+	color: var(--map-marker-stroke, #fff);
+	font: inherit;
+	font-weight: 600;
+}
+
+/* A dark site: the tiles inverted, which keeps the labels readable. */
+.map--dark .leaflet-tile {
+	filter: invert(1) hue-rotate(180deg) brightness(0.95) contrast(0.9) saturate(0.6);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.map .leaflet-fade-anim .leaflet-tile,
+	.map .leaflet-zoom-anim .leaflet-zoom-animated {
+		transition: none;
+	}
+}
+
+/* Search HQ: the map as a sticker, with ink outlines on everything. */
+
+.map--hq {
+	--map-marker: var(--coral);
+	--map-marker-stroke: var(--ink);
+	--map-radius: var(--radius);
+	--map-height: min(70vh, 640px);
+	aspect-ratio: auto;
+	border: var(--border);
+	box-shadow: var(--shadow-lg);
+}
+
+.map--hq .leaflet-popup-content-wrapper {
+	border: var(--border);
+	box-shadow: var(--shadow);
+}
+
+.map--hq .leaflet-popup-tip {
+	border: var(--border);
+}
+
+.map--hq .leaflet-control-zoom {
+	border: var(--border);
+	border-radius: var(--radius-sm);
+	box-shadow: var(--shadow-sm);
+}
+
+.map--hq .marker-cluster {
+	border: 2.5px solid var(--ink);
+}
+
+.map--hq .marker-cluster div {
+	border: 2.5px solid var(--ink);
+	color: var(--ink);
+	font-weight: 900;
+}
+
+.map__popup a {
+	font-weight: 700;
+}
+
+/* Ainsley's face, hopping between buffalo. */
+.map__ainsley {
+	background: none;
+	border: 0;
+}
+
+.map__ainsley img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	background: var(--mustard, #FFDB58);
+	border: 3px solid var(--ink, #121212);
+	border-radius: 50%;
+	box-shadow: 3px 3px 0 var(--ink, #121212);
+	animation: ainsley-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes ainsley-pulse {
+	0%, 100% { scale: 1; }
+	50% { scale: 1.12; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.map__ainsley img {
+		animation: none;
+	}
+}

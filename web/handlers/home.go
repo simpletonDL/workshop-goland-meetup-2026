@@ -2,10 +2,10 @@ package handlers
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 	"net/http"
 	"workshop/internal/domain/sighting"
+	"workshop/web/views/pages"
 )
 
 type SightingsLister interface {
@@ -14,11 +14,21 @@ type SightingsLister interface {
 
 func Home(logger *slog.Logger, lister SightingsLister) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// TODO: Implement
-		// 1. Call the sightings service to List.
-		// 2. Set content type to text/html.
-		// 3. Render home page.
 		ctx := r.Context()
-		logger.InfoContext(ctx, fmt.Sprintf("handlers: homepage: %+v", r.URL))
+
+		sightings, err := lister.List(ctx, sighting.ListFilter{})
+		if err != nil {
+			logger.ErrorContext(ctx, "handlers: homepage: listing sightings: "+err.Error())
+			renderError(ctx, w, logger, http.StatusInternalServerError, "Sightings couldn't be loaded.")
+			return
+		}
+
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+
+		// The status is already sent once rendering starts, so a failure
+		// here can only be logged.
+		if err := pages.Home(sightings).Render(ctx, w); err != nil {
+			logger.ErrorContext(ctx, "handlers: homepage: rendering: "+err.Error())
+		}
 	}
 }

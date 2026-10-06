@@ -1,0 +1,8 @@
+{
+	"name": "Where's Ainsley? Lost in Africa",
+	"short_name": "Ainsley?",
+	"icons": [{ "src": "/assets/images/logo.svg", "sizes": "any", "type": "image/svg+xml" }],
+	"theme_color": "#FFDB58",
+	"background_color": "#FFF6E0",
+	"display": "standalone"
+}

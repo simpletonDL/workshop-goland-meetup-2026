@@ -1,0 +1,572 @@
+/* The trip: a sticky stage with Ainsley in the middle, and chapters that
+   scroll over it. trip.js sets --sky, --ground, data-pose and .is-active
+   from whichever chapter is mid-screen. */
+
+.trip {
+	--sky: var(--mustard);
+	--ground: var(--orange);
+	position: relative;
+}
+
+.stage {
+	position: sticky;
+	top: var(--header-h);
+	height: calc(100svh - var(--header-h));
+	overflow: hidden;
+	isolation: isolate;
+}
+
+/* Layers, back to front */
+.stage__sky { z-index: 0; }
+.stage__sun { z-index: 1; }
+.stage__hill { z-index: 2; }
+.ainsley { z-index: 4; }
+.stage__ground { z-index: 5; }
+.animal { z-index: 6; }
+.animal.spot-back-left,
+.animal.spot-back-right { z-index: 3; }
+.animal.spot-front-left,
+.animal.spot-front-right { z-index: 7; }
+.ainsley-say { z-index: 8; }
+.trail { z-index: 9; }
+
+.stage__sky {
+	position: absolute;
+	inset: 0;
+	background-color: var(--sky);
+	background-image: radial-gradient(rgb(18 18 18 / 0.13) 1.5px, transparent 1.6px);
+	background-size: 22px 22px;
+	transition: background-color 0.7s ease;
+}
+
+.stage__sun {
+	position: absolute;
+	top: 16%;
+	right: 7%;
+	width: clamp(64px, 11vw, 140px);
+	aspect-ratio: 1;
+	background: #FFF3B8;
+	border: var(--border);
+	border-radius: 50%;
+	box-shadow: var(--shadow);
+}
+
+.stage__sun::after {
+	content: "";
+	position: absolute;
+	inset: -16px;
+	border: 4px dashed var(--ink);
+	border-radius: 50%;
+	animation: spin 40s linear infinite;
+}
+
+.stage__hill,
+.stage__ground {
+	position: absolute;
+	left: 0;
+	width: 100%;
+	stroke: var(--ink);
+	stroke-width: 4px;
+	transition: fill 0.7s ease;
+}
+
+.stage__hill {
+	bottom: 0;
+	height: 38%;
+	fill: color-mix(in srgb, var(--ground) 55%, var(--white));
+}
+
+.stage__ground {
+	bottom: -2px;
+	height: 18%;
+	fill: var(--ground);
+}
+
+/* The trail: one link per chapter, the current one filled in. */
+
+.trail {
+	position: absolute;
+	top: var(--space-3);
+	left: 50%;
+	max-width: calc(100% - 24px);
+	overflow-x: auto;
+	scrollbar-width: none;
+	translate: -50% 0;
+}
+
+.trail ol {
+	display: flex;
+	gap: 6px;
+	margin: 0;
+	padding: 4px 6px 7px 4px;
+	list-style: none;
+}
+
+@media (min-width: 900px) {
+	.trail {
+		left: 68%;
+		max-width: 62%;
+	}
+}
+
+.trail a {
+	display: block;
+	padding: 4px 12px;
+	color: var(--ink);
+	background: var(--white);
+	border: 2.5px solid var(--ink);
+	border-radius: var(--pill);
+	box-shadow: 2px 2px 0 var(--ink);
+	font-size: 13px;
+	font-weight: 700;
+	text-decoration: none;
+	white-space: nowrap;
+	transition: background-color 0.2s, color 0.2s;
+}
+
+.trail a:hover {
+	background: var(--mustard);
+}
+
+.trail a[aria-current] {
+	color: var(--mustard);
+	background: var(--ink);
+}
+
+/* The scene: where Ainsley and the animals stand. On wide screens it
+   moves right to leave the captions room on the left. */
+
+.scene {
+	--ainsley-h: min(36svh, 78vw, 560px);
+	--animal: clamp(42px, 8vmin, 96px);
+	position: absolute;
+	inset: 0;
+}
+
+@media (min-width: 900px) {
+	.scene {
+		--ainsley-h: min(58svh, 560px);
+		left: 36%;
+	}
+}
+
+.ainsley {
+	position: absolute;
+	left: 50%;
+	bottom: 3%;
+	width: var(--ainsley-h);
+	height: var(--ainsley-h);
+	padding: 0;
+	background: none;
+	border: 0;
+	border-radius: var(--radius);
+	cursor: pointer;
+	translate: -50% 0;
+	animation: nervous 2.6s ease-in-out infinite;
+}
+
+.ainsley:focus-visible {
+	outline: 4px dashed var(--ink);
+	outline-offset: 6px;
+}
+
+.ainsley.is-poked {
+	animation: poke 0.5s ease;
+}
+
+.ainsley__photo {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	object-fit: contain;
+	object-position: 50% 100%;
+	filter:
+		drop-shadow(3px 0 0 var(--white))
+		drop-shadow(-3px 0 0 var(--white))
+		drop-shadow(0 -3px 0 var(--white))
+		drop-shadow(6px 6px 0 var(--ink));
+	transition: opacity 0.35s, scale 0.35s;
+	transform-origin: 50% 100%;
+}
+
+.ainsley__photo--mic,
+.trip[data-pose="mic"] .ainsley__photo--stand {
+	opacity: 0;
+	scale: 0.85;
+}
+
+.trip[data-pose="mic"] .ainsley__photo--mic {
+	opacity: 1;
+	scale: 1;
+}
+
+.ainsley__sweat {
+	position: absolute;
+	top: 10%;
+	left: 68%;
+	font-size: clamp(22px, 3vw, 38px);
+	animation: drip 1.6s ease-in infinite;
+}
+
+.ainsley-say {
+	position: absolute;
+	left: 50%;
+	bottom: calc(3% + var(--ainsley-h) * 0.92);
+	width: max-content;
+	max-width: min(260px, 62vw);
+	padding: 10px 14px;
+	background: var(--white);
+	border: var(--border);
+	border-radius: 16px;
+	box-shadow: 4px 4px 0 var(--ink);
+	font-size: clamp(14px, 1.5vw, 17px);
+	font-weight: 700;
+	line-height: 1.25;
+	translate: -50% 0;
+}
+
+.ainsley-say::after {
+	content: "";
+	position: absolute;
+	right: calc(50% - 8px);
+	bottom: -10px;
+	width: 16px;
+	height: 16px;
+	background: var(--white);
+	border-right: var(--border);
+	border-bottom: var(--border);
+	rotate: 45deg;
+}
+
+@media (min-width: 900px) {
+	.ainsley-say {
+		translate: -88% 0;
+	}
+
+	.ainsley-say::after {
+		right: 18px;
+	}
+}
+
+.ainsley-say:empty {
+	display: none;
+}
+
+.ainsley-say.is-popping {
+	animation: pop 0.4s cubic-bezier(0.3, 1.7, 0.5, 1);
+}
+
+/* Animals. Each cast is one chapter's; only the active one shows. The
+   outer box pops in, the body moves, the emoji flips. */
+
+.cast {
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+}
+
+.animal {
+	position: absolute;
+	font-size: var(--animal);
+	line-height: 1;
+	opacity: 0;
+	scale: 0.2;
+	transform-origin: 50% 100%;
+	transition: opacity 0.2s, scale 0.2s;
+}
+
+.cast.is-active .animal {
+	opacity: 1;
+	scale: 1;
+	transition: opacity 0.3s, scale 0.5s cubic-bezier(0.3, 1.7, 0.5, 1);
+}
+
+.cast.is-active .animal:nth-child(2) { transition-delay: 0.12s; }
+.cast.is-active .animal:nth-child(3) { transition-delay: 0.24s; }
+.cast.is-active .animal:nth-child(4) { transition-delay: 0.36s; }
+.cast.is-active .animal:nth-child(5) { transition-delay: 0.48s; }
+.cast.is-active .animal:nth-child(6) { transition-delay: 0.6s; }
+
+.size-l { font-size: calc(var(--animal) * 1.55); }
+.size-s { font-size: calc(var(--animal) * 0.7); }
+
+.animal__body {
+	display: inline-block;
+	filter: drop-shadow(3px 3px 0 var(--ink));
+}
+
+.animal__emoji {
+	display: inline-block;
+}
+
+.is-flipped .animal__emoji {
+	scale: -1 1;
+}
+
+.animal__say {
+	position: absolute;
+	bottom: calc(100% + 8px);
+	left: 0;
+	width: max-content;
+	max-width: 15ch;
+	padding: 6px 10px;
+	background: var(--white);
+	border: 2.5px solid var(--ink);
+	border-radius: 12px;
+	box-shadow: var(--shadow-sm);
+	font-size: clamp(12px, 1.25vw, 15px);
+	font-weight: 700;
+	line-height: 1.2;
+	opacity: 0;
+	scale: 0.5;
+	transform-origin: 0 100%;
+	transition: opacity 0.15s, scale 0.15s;
+}
+
+.cast.is-active .animal__say {
+	opacity: 1;
+	scale: 1;
+	transition: opacity 0.2s 0.6s, scale 0.4s 0.6s cubic-bezier(0.3, 1.7, 0.5, 1);
+}
+
+.cast.is-active .animal:nth-child(2) .animal__say { transition-delay: 1s; }
+.cast.is-active .animal:nth-child(3) .animal__say { transition-delay: 1.4s; }
+.cast.is-active .animal:nth-child(4) .animal__say { transition-delay: 1.8s; }
+
+/* Spots around Ainsley. --dir points towards him, so lunges go his way. */
+
+.spot-left,
+.spot-high-left,
+.spot-front-left,
+.spot-back-left,
+.spot-sky { --dir: 1; }
+
+.spot-right,
+.spot-high-right,
+.spot-front-right,
+.spot-back-right { --dir: -1; }
+
+.spot-left { left: 2%; bottom: 13%; }
+.spot-right { right: 2%; bottom: 13%; }
+.spot-high-left { left: 5%; bottom: 46%; }
+.spot-high-right { right: 5%; bottom: 46%; }
+.spot-sky { left: 16%; top: 20%; }
+.spot-front-left { left: 12%; bottom: 2%; }
+.spot-front-right { right: 12%; bottom: 2%; }
+.spot-back-left { left: 1%; bottom: 20%; }
+.spot-back-right { right: 1%; bottom: 20%; }
+
+.spot-right .animal__say,
+.spot-high-right .animal__say,
+.spot-front-right .animal__say,
+.spot-back-right .animal__say {
+	left: auto;
+	right: 0;
+	transform-origin: 100% 100%;
+}
+
+/* Moves */
+
+.move-chomp .animal__body { animation: chomp 1.4s ease-in-out infinite; }
+.move-sneak .animal__body { animation: sneak 3.6s ease-in-out infinite; }
+.move-bob .animal__body { animation: bob 1.1s ease-in-out infinite alternate; }
+.move-circle .animal__body { animation: circle 7s linear infinite; }
+.move-sway .animal__body { animation: sway 3s ease-in-out infinite alternate; transform-origin: 50% 100%; }
+.move-throw .animal__body { animation: throw 1.8s ease-in infinite; }
+.move-lob .animal__body { animation: throw 1.8s ease-in 0.9s infinite backwards; }
+.move-jump .animal__body { animation: jump 0.9s ease-in-out infinite; transform-origin: 50% 100%; }
+.move-shake .animal__body { animation: shake 2s ease-in-out infinite; }
+.move-peek .animal__body { animation: peek-up 3.4s ease-in-out infinite; }
+.move-swim .animal__body { animation: swim 4s ease-in-out infinite alternate; }
+
+/* Chapters */
+
+.chapters {
+	position: relative;
+	z-index: 1;
+	margin: calc(var(--header-h) - 100svh) 0 0;
+	padding: 0;
+	list-style: none;
+	pointer-events: none;
+}
+
+.chapter {
+	display: flex;
+	align-items: flex-start;
+	min-height: 125svh;
+	padding: 64px var(--space-4) var(--space-7);
+}
+
+.chapter:first-child {
+	min-height: calc(100svh - var(--header-h));
+}
+
+@media (min-width: 900px) {
+	.chapter {
+		align-items: center;
+		padding: var(--space-8) var(--gutter);
+	}
+}
+
+.caption {
+	display: grid;
+	gap: var(--space-3);
+	justify-items: start;
+	width: 100%;
+	max-width: 460px;
+	padding: clamp(16px, 2.4vw, 28px);
+	background: var(--white);
+	border: var(--border);
+	border-radius: var(--radius);
+	box-shadow: var(--shadow-lg);
+	pointer-events: auto;
+}
+
+@media (min-width: 900px) {
+	.caption {
+		width: 32vw;
+	}
+}
+
+.caption__day {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--space-2);
+	font-size: 14px;
+	font-weight: 700;
+}
+
+.caption__title {
+	font-size: clamp(24px, 3vw, 40px);
+}
+
+.caption--hero .caption__title {
+	font-size: clamp(36px, 6vw, 76px);
+	line-height: 0.95;
+}
+
+.caption__story {
+	font-size: clamp(15px, 1.3vw, 18px);
+}
+
+.caption__witnesses {
+	padding: 6px 12px;
+	background: var(--paper);
+	border: 2.5px solid var(--ink);
+	border-radius: var(--radius-sm);
+	font-size: 14px;
+	font-weight: 700;
+}
+
+@media (max-width: 899px) {
+	.caption {
+		gap: var(--space-2);
+	}
+
+	.caption__story {
+		font-size: 15px;
+		line-height: 1.4;
+	}
+}
+
+@keyframes spin {
+	to { rotate: 360deg; }
+}
+
+@keyframes nervous {
+	0%, 100% { transform: translateY(0) rotate(0deg); }
+	25% { transform: translateY(-5px) rotate(-1deg); }
+	50% { transform: translateY(0) rotate(0.6deg); }
+	75% { transform: translateY(-3px) rotate(-0.4deg); }
+}
+
+@keyframes poke {
+	0% { transform: scale(1) rotate(0deg); }
+	25% { transform: scale(0.94, 1.06) rotate(-4deg) translateY(-14px); }
+	50% { transform: scale(1.04, 0.96) rotate(3deg); }
+	75% { transform: rotate(-2deg); }
+	100% { transform: scale(1) rotate(0deg); }
+}
+
+@keyframes drip {
+	0% { opacity: 0; transform: translateY(-6px) scale(0.6); }
+	20% { opacity: 1; transform: translateY(0) scale(1); }
+	100% { opacity: 0; transform: translateY(28px) scale(0.8); }
+}
+
+@keyframes pop {
+	from { scale: 0.4; opacity: 0; }
+	to { scale: 1; opacity: 1; }
+}
+
+@keyframes chomp {
+	0%, 100% { transform: translateX(0) rotate(0deg); }
+	45% { transform: translateX(calc(var(--dir) * 26px)) rotate(calc(var(--dir) * 10deg)); }
+	55% { transform: translateX(calc(var(--dir) * 30px)) rotate(calc(var(--dir) * -8deg)); }
+	65% { transform: translateX(calc(var(--dir) * 26px)) rotate(calc(var(--dir) * 6deg)); }
+}
+
+@keyframes sneak {
+	0%, 100% { transform: translate(0, 0); }
+	50% { transform: translate(calc(var(--dir) * 40px), -4px); }
+}
+
+@keyframes bob {
+	from { transform: translateY(0); }
+	to { transform: translateY(-12px); }
+}
+
+@keyframes circle {
+	from { transform: rotate(0deg) translateX(48px) rotate(0deg); }
+	to { transform: rotate(360deg) translateX(48px) rotate(-360deg); }
+}
+
+@keyframes sway {
+	from { transform: rotate(-4deg); }
+	to { transform: rotate(4deg); }
+}
+
+@keyframes throw {
+	0% { opacity: 0; transform: translate(0, 0) rotate(0deg); }
+	10% { opacity: 1; }
+	50% { transform: translate(calc(var(--dir) * 110px), -80px) rotate(360deg); }
+	90% { opacity: 1; }
+	100% { opacity: 0; transform: translate(calc(var(--dir) * 220px), 40px) rotate(720deg); }
+}
+
+@keyframes jump {
+	0%, 100% { transform: translateY(0) scale(1, 1); }
+	35% { transform: translateY(-26px) scale(0.94, 1.06); }
+	60% { transform: translateY(0) scale(1.1, 0.9); }
+}
+
+@keyframes shake {
+	0%, 55%, 100% { transform: rotate(0deg); }
+	60% { transform: rotate(-8deg) translateY(-6px); }
+	65% { transform: rotate(8deg); }
+	70% { transform: rotate(-8deg) translateY(-6px); }
+	75% { transform: rotate(8deg); }
+	80% { transform: rotate(0deg); }
+}
+
+@keyframes peek-up {
+	0%, 100% { transform: translateY(45%); }
+	35%, 75% { transform: translateY(0); }
+	55% { transform: translateY(0) rotate(calc(var(--dir) * 6deg)); }
+}
+
+@keyframes swim {
+	from { transform: translateX(0); }
+	to { transform: translateX(calc(var(--dir) * 80px)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.ainsley,
+	.animal__body,
+	.ainsley__sweat,
+	.stage__sun::after {
+		animation: none !important;
+	}
+}

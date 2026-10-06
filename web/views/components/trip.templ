@@ -1,0 +1,80 @@
+package components
+
+templ Trip(chapters []Chapter) {
+	<div class="trip" id="trip">
+		<div class="stage">
+			<div class="stage__sky" aria-hidden="true"></div>
+			<div class="stage__sun" aria-hidden="true"></div>
+			<svg class="stage__hill" viewBox="0 0 1000 200" preserveAspectRatio="none" aria-hidden="true">
+				<path d="M-10 90C150 40 300 40 450 85S760 135 1010 60V210H-10Z" vector-effect="non-scaling-stroke"></path>
+			</svg>
+			<nav class="trail" aria-label="Ainsley's trip">
+				<ol>
+					for _, c := range chapters {
+						<li><a href={ templ.SafeURL("#" + c.ID) }>{ c.Short }</a></li>
+					}
+				</ol>
+			</nav>
+			<div class="scene">
+				for i, c := range chapters {
+					@cast(c, i == 0)
+				}
+				<button class="ainsley" type="button" aria-label="Poke Ainsley">
+					<img class="ainsley__photo ainsley__photo--stand" src="/assets/images/ainsley.png" alt="" width="718" height="730"/>
+					<img class="ainsley__photo ainsley__photo--mic" src="/assets/images/ainsley-mic.png" alt="" width="403" height="679"/>
+					<span class="ainsley__sweat" aria-hidden="true">💦</span>
+				</button>
+				<p class="ainsley-say" aria-live="polite"></p>
+			</div>
+			<svg class="stage__ground" viewBox="0 0 1000 200" preserveAspectRatio="none" aria-hidden="true">
+				<path d="M-10 105C180 70 340 140 520 110S830 70 1010 115V210H-10Z" vector-effect="non-scaling-stroke"></path>
+			</svg>
+		</div>
+		<ol class="chapters">
+			for i, c := range chapters {
+				<li
+					class="chapter"
+					id={ c.ID }
+					data-scene={ c.ID }
+					data-sky={ c.Sky }
+					data-ground={ c.Ground }
+					data-pose={ c.Pose }
+					data-ainsley={ c.Ainsley }
+				>
+					@caption(c, i == 0)
+				</li>
+			}
+		</ol>
+	</div>
+}
+
+templ cast(c Chapter, active bool) {
+	<div class={ "cast", templ.KV("is-active", active) } data-cast={ c.ID } aria-hidden="true">
+		for _, a := range c.Cast {
+			<div class={ animalClass(a) }>
+				<span class="animal__body"><span class="animal__emoji">{ a.Emoji }</span></span>
+				if a.Say != "" {
+					<span class="animal__say">{ a.Say }</span>
+				}
+			</div>
+		}
+	</div>
+}
+
+templ caption(c Chapter, hero bool) {
+	<article class={ "caption", templ.KV("caption--hero", hero) }>
+		<p class="caption__day"><span class="tag">{ c.Day }</span> { c.Place }</p>
+		if hero {
+			<h1 class="caption__title">{ c.Title }</h1>
+		} else {
+			<h2 class="caption__title">{ c.Title }</h2>
+		}
+		<p class="caption__story">{ c.Story }</p>
+		if c.Witnesses != "" {
+			<p class="caption__witnesses"><span aria-hidden="true">🐃</span> { c.Witnesses }</p>
+		}
+		if c.Link != nil {
+			<a class="button" href={ templ.SafeURL(c.Link.Href) }>{ c.Link.Label }</a>
+		}
+	</article>
+}

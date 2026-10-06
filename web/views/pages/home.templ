@@ -1,11 +1,60 @@
 package pages
 
-import "workshop/internal/domain/sighting"
+import (
+	"strconv"
+	"workshop/internal/domain/sighting"
+	"workshop/web/views/components"
+	"workshop/web/views/layout"
+)
 
 templ Home(sightings []sighting.Sighting) {
-	// TODO: Implement
-	// 1. Wrap the page in layout.Base, giving it a title.
-	// 2. Say so when there are no sightings, and show the total when there are.
-	// 3. Render a components.SightingCard for each sighting.
-	// Think about error handling.
+	@layout.Base(layout.BaseProps{
+		Title:       "Where's Ainsley? Lost in Africa",
+		Description: "Ainsley popped out for a flat white and got lost in Africa. The buffalo saw everything.",
+		Map:         true,
+	}) {
+		@components.Trip(chapters(sightings))
+		{{ sum := sighting.Summarise(sightings) }}
+		<section class="section hq" id="search" aria-labelledby="search-title">
+			<div class="section__head">
+				<p class="eyebrow">Search HQ</p>
+				<h2 id="search-title">Every pin is a buffalo who swears it saw him</h2>
+				<p>Click a cluster to zoom in, or a pin to read the statement. If you spot Ainsley's face, click it. He won't stay put.</p>
+			</div>
+			<ul class="stats">
+				<li class="stat stat--coral"><strong>{ strconv.Itoa(sum.Sightings) }</strong> buffalo witnesses</li>
+				<li class="stat stat--mustard"><strong>{ strconv.Itoa(sum.Countries) }</strong> countries searched</li>
+				<li class="stat stat--white"><strong>{ strconv.Itoa(sum.Recorders) }</strong> humans taking notes</li>
+				<li class="stat stat--ink"><strong>0</strong> Ainsleys found</li>
+			</ul>
+			@components.Map(components.MapProps{
+				Points:   components.MapPoints(sightings),
+				Cluster:  true,
+				Label:    "Map of Africa showing where each buffalo witness says it saw Ainsley",
+				LastSeen: "/assets/images/ainsley-face.png",
+				Class:    "map--hq",
+			})
+		</section>
+		<section class="section witnesses" id="witnesses" aria-labelledby="witnesses-title">
+			<div class="section__head">
+				<p class="eyebrow">The case file</p>
+				<h2 id="witnesses-title">Witness statements</h2>
+				<p>{ statements(len(sightings)) }</p>
+			</div>
+			if len(sightings) == 0 {
+				<p class="empty">No buffalo have come forward yet. They're scared of the lions.</p>
+			} else {
+				<div class="case-file" role="region" aria-label="All witness statements, scrollable" tabindex="0">
+					<ol class="witness-list">
+						for i, s := range sightings {
+							<li id={ components.Anchor(s) }>
+								@components.Witness(s, i+1)
+							</li>
+						}
+					</ol>
+				</div>
+			}
+		</section>
+		@components.Tracker()
+	}
 }

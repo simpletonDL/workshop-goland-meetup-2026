@@ -1,0 +1,45 @@
+package components
+
+import (
+	"cmp"
+	"strconv"
+	"workshop/internal/domain/sighting"
+)
+
+templ Witness(s sighting.Sighting, n int) {
+	<article class="witness">
+		{{ photo, ok := firstPhoto(s.Media) }}
+		if ok {
+			<img class="witness__photo" src={ string(templ.URL(thumb(photo.URL))) } alt={ witnessAlt(n, photo) } width="88" height="88" loading="lazy"/>
+		} else {
+			<span class="witness__photo witness__photo--none" aria-hidden="true">🐃</span>
+		}
+		<div class="witness__body">
+			<h3 class="witness__name">
+				Witness #{ strconv.Itoa(n) }
+				<span class="witness__species">{ displayName(s.Species) }</span>
+			</h3>
+			<p class="witness__quote">“{ quote(n) }”</p>
+			<dl class="witness__meta">
+				<dt>Seen</dt>
+				<dd><time datetime={ s.HappenedAt.Format("2006-01-02") }>{ s.HappenedAt.Format("2 Jan 2006") }</time></dd>
+				<dt>Where</dt>
+				<dd>{ place(s.Location) }</dd>
+				if s.IndividualCount != nil {
+					<dt>Herd</dt>
+					<dd>{ individuals(*s.IndividualCount) }</dd>
+				}
+				<dt>Taken by</dt>
+				<dd>{ cmp.Or(s.RecordedBy, "Nobody. It ran off.") }</dd>
+			</dl>
+		</div>
+	</article>
+}
+
+templ Tracker() {
+	<a class="tracker" href="#trip">
+		<span class="tracker__lion" aria-hidden="true">🦁</span>
+		<img class="tracker__face" src="/assets/images/ainsley-face.png" alt="" width="96" height="96"/>
+		<span class="tracker__label">Still lost<span class="visually-hidden">: back to Ainsley</span></span>
+	</a>
+}
